@@ -7,7 +7,7 @@ import io
 
 app = FastAPI()
 
-# CORS (required)
+# Required for GA3
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -36,11 +36,11 @@ def run_code(data: CodeInput):
     try:
         exec(code, {})
 
-        output = sys.stdout.getvalue().strip()
+        result = sys.stdout.getvalue()
         sys.stdout = old_stdout
 
         return {
-            "output": output,
+            "result": result,
             "error": []
         }
 
@@ -49,11 +49,9 @@ def run_code(data: CodeInput):
 
         tb = traceback.extract_tb(sys.exc_info()[2])
 
-        error_lines = []
-        for t in tb:
-            error_lines.append(t.lineno)
+        error_lines = [t.lineno for t in tb]
 
         return {
-            "output": "",
+            "result": "",
             "error": error_lines
         }
