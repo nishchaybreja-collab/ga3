@@ -49,9 +49,10 @@ def run_code(data: CodeInput):
 
         tb = traceback.extract_tb(sys.exc_info()[2])
 
-        error_lines = [t.lineno for t in tb]
+        # ONLY the last frame belongs to user code
+        error_line = tb[-1].lineno if tb else 0
 
         return {
             "result": "",
-            "error": error_lines
+            "error": [error_line]
         }
