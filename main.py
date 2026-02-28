@@ -7,7 +7,7 @@ import io
 
 app = FastAPI()
 
-# ---- CORS (required for GA3 tester) ----
+# CORS (required)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -16,7 +16,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ---- Request model ----
 class CodeInput(BaseModel):
     code: str
 
@@ -26,32 +25,35 @@ def root():
     return {"status": "running"}
 
 
-# ---- Code Interpreter Endpoint ----
 @app.post("/code-interpreter")
 def run_code(data: CodeInput):
+
     code = data.code
 
-    # Capture printed output
     old_stdout = sys.stdout
     sys.stdout = io.StringIO()
 
     try:
-        local_vars = {}
-        exec(code, {}, local_vars)
+        exec(code, {})
 
-        output = sys.stdout.getvalue()
-
+        output = sys.stdout.getvalue().strip()
         sys.stdout = old_stdout
 
         return {
-            "output": output.strip()
+            "output": output,
+            "error": []
         }
 
     except Exception:
         sys.stdout = old_stdout
 
-        tb = traceback.format_exc()
+        tb = traceback.extract_tb(sys.exc_info()[2])
+
+        error_lines = []
+        for t in tb:
+            error_lines.append(t.lineno)
 
         return {
-            "error": tb
+            "output": "",
+            "error": error_lines
         }
